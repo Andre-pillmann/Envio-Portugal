@@ -8,21 +8,21 @@
 <meta name="apple-mobile-web-app-title" content="Envio PT">
 <meta name="theme-color" content="#050c18">
 <title>Envio para Portugal</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#050c18;--surf:#0b1525;--surf2:#0f1c30;--border:#131f35;--border2:#1a2a42;--text:#dde8f5;--muted:#3d5470;--dim:#213048;--great:#00d68f;--good:#4db8ff;--bad:#f59e0b;--worst:#ef4444}
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh}
+html,body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;min-height:100vh}
 body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset-bottom),24px)}
 .header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 20px 10px;display:flex;align-items:center;justify-content:space-between}
-.header-title{font-family:'Fraunces',serif;font-size:18px;font-weight:800}
+.header-title{font-family:'Instrument Serif',serif;font-size:22px;font-weight:400;letter-spacing:-0.5px}
 .header-sub{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
 .live-pill{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:10px;color:var(--muted)}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--great);animation:blink 2s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 #signalBanner{padding:16px 20px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border);transition:background .4s}
-.signal-emoji{font-size:12px;font-weight:700;font-family:'Fraunces',serif;color:var(--muted);background:var(--surf);border:1px solid var(--border2);padding:8px 12px;border-radius:10px;letter-spacing:.08em;min-width:54px;text-align:center;flex-shrink:0}
-.signal-title{font-family:'Fraunces',serif;font-weight:800;font-size:15px;margin-bottom:3px}
+.signal-emoji{font-size:11px;font-weight:700;font-family:'Inter',sans-serif;color:var(--muted);background:var(--surf);border:1px solid var(--border2);padding:8px 12px;border-radius:10px;letter-spacing:.08em;min-width:54px;text-align:center;flex-shrink:0}
+.signal-title{font-family:'Inter',sans-serif;font-weight:700;font-size:14px;margin-bottom:4px;letter-spacing:-0.2px}
 .signal-desc{font-size:11px;line-height:1.5;color:var(--muted)}
 .scroll{padding:14px 14px 0;display:flex;flex-direction:column;gap:12px}
 .hero{background:var(--surf);border:1px solid var(--border);border-radius:18px;padding:20px 18px 16px}
@@ -31,17 +31,17 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
 .hero-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500}
 .rate-display{display:flex;align-items:baseline;gap:5px;margin-bottom:6px}
 .rate-prefix{font-size:20px;font-weight:300;opacity:.45}
-.rate-num{font-family:'Fraunces',serif;font-size:54px;font-weight:800;letter-spacing:-3px;line-height:1}
+.rate-num{font-family:'Inter',sans-serif;font-size:54px;font-weight:800;letter-spacing:-2.5px;line-height:1;font-feature-settings:'tnum'}
 .rate-change{font-size:12px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .change-chip{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--border2);color:var(--muted)}
 .simulator{background:var(--surf2);border:1px solid var(--border2);border-radius:12px;padding:14px}
 .sim-label{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px}
 .sim-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.sim-input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:15px;color:var(--text);-webkit-appearance:none;outline:none}
+.sim-input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-family:'Inter',-apple-system,sans-serif;font-size:15px;color:var(--text);-webkit-appearance:none;outline:none}
 .sim-currency{font-size:11px;color:var(--muted)}
 .sim-arrow{font-size:14px;color:var(--dim);text-align:center;margin:2px 0 8px}
 .sim-result{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
-.sim-result-val{font-family:'Fraunces',serif;font-size:20px;font-weight:700}
+.sim-result-val{font-family:'Inter',sans-serif;font-size:22px;font-weight:700;letter-spacing:-0.5px;font-feature-settings:'tnum'}
 .sim-result-lbl{font-size:10px;color:var(--muted)}
 .card{background:var(--surf);border:1px solid var(--border);border-radius:18px;padding:16px}
 .card-title{font-size:10px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}
@@ -51,7 +51,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
 .zone-name{font-size:13px;font-weight:500}
 .zone-sub{font-size:10px;color:var(--muted)}
 .zone-right{text-align:right}
-.zone-price{font-family:'Fraunces',serif;font-size:17px;font-weight:700}
+.zone-price{font-family:'Inter',sans-serif;font-size:17px;font-weight:700;letter-spacing:-0.3px;font-feature-settings:'tnum'}
 .zone-status{font-size:9px;margin-top:3px;padding:2px 8px;border-radius:10px;display:inline-block;letter-spacing:.08em}
 .zone-great{background:rgba(0,214,143,.1);border-color:rgba(0,214,143,.25)}
 .zone-great .zone-name,.zone-great .zone-price{color:var(--great)}
@@ -67,11 +67,11 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
 .hist-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);gap:10px}
 .hist-row:last-child{border-bottom:none}
 .hist-date{font-size:11px;color:var(--muted);width:46px;flex-shrink:0}
-.hist-rate{font-family:'Fraunces',serif;font-weight:600;font-size:17px;flex:1}
+.hist-rate{font-family:'Inter',sans-serif;font-weight:600;font-size:17px;flex:1;letter-spacing:-0.3px;font-feature-settings:'tnum'}
 .hist-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .hist-chg{font-size:11px}
 .hist-tag{font-size:9px;padding:1px 7px;border-radius:10px}
-.refresh-btn{width:100%;background:var(--surf);border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.1em;padding:16px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-appearance:none}
+.refresh-btn{width:100%;background:var(--surf);border:1px solid var(--border2);color:var(--muted);font-family:'Inter',-apple-system,sans-serif;font-size:12px;letter-spacing:.1em;padding:16px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-appearance:none}
 .refresh-btn:active{transform:scale(.98)}
 .refresh-btn:disabled{opacity:.5}
 .spin{animation:spin 1s linear infinite;display:inline-block}
@@ -111,18 +111,18 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
       <span style="font-size:10px;color:var(--muted)" id="rateDate">Aguardando</span>
     </div>
     <div class="simulator">
-      <div class="sim-label">Simular Envio</div>
+      <div class="sim-label">Simular Conversao (taxa media do dia)</div>
       <div class="sim-row">
-        <input class="sim-input" type="number" id="simBrl" value="1000" inputmode="decimal">
-        <span class="sim-currency">R$ BRL</span>
+        <span class="sim-currency" style="min-width:54px">EUR &euro;</span>
+        <input class="sim-input" type="number" id="simEurInput" value="100" inputmode="decimal" step="0.01">
       </div>
-      <div class="sim-arrow">converte em</div>
+      <div class="sim-arrow">equivale a</div>
       <div class="sim-result">
         <div>
-          <div class="sim-result-val" id="simEur" style="color:var(--muted)">EUR --</div>
-          <div class="sim-result-lbl">euros recebidos em Portugal</div>
+          <div class="sim-result-val" id="simBrlOutput" style="color:var(--muted)">R$ --</div>
+          <div class="sim-result-lbl">reais convertidos hoje</div>
         </div>
-        <div style="font-size:10px;color:var(--muted);text-align:right" id="simRate">Taxa: --</div>
+        <div style="font-size:10px;color:var(--muted);text-align:right" id="simRate">Media: --</div>
       </div>
     </div>
   </div>
@@ -291,18 +291,35 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     simulate();
   }
 
+  function getDailyAverage() {
+    // Average of recent days (last 3 if available, else current rate)
+    var rates = [];
+    for (var i = 0; i < history.length; i++) {
+      if (history[i].rate != null && !isNaN(history[i].rate)) rates.push(history[i].rate);
+    }
+    if (rates.length === 0) return currentRate ? currentRate.rate : null;
+    var recent = rates.slice(-3);
+    var sum = 0;
+    for (var j = 0; j < recent.length; j++) sum += recent[j];
+    return sum / recent.length;
+  }
+
   function simulate() {
-    var inp = document.getElementById("simBrl");
+    var inp = document.getElementById("simEurInput");
     if (!inp) return;
-    var brl = parseFloat(inp.value) || 0;
-    var rate = currentRate ? currentRate.rate : null;
-    if (!rate || !brl) return;
-    var eur = brl / rate;
-    var zone = classify(rate);
+    var eur = parseFloat(inp.value) || 0;
+    var avgRate = getDailyAverage();
+    if (!avgRate || !eur) {
+      document.getElementById("simBrlOutput").textContent = "R$ --";
+      document.getElementById("simRate").textContent = "Media: --";
+      return;
+    }
+    var brl = eur * avgRate;
+    var zone = classify(avgRate);
     var colors = { rare: "var(--great)", good: "var(--good)", neutral: "var(--text)", bad: "var(--bad)" };
-    document.getElementById("simEur").textContent = "EUR " + eur.toFixed(2);
-    document.getElementById("simEur").style.color = colors[zone] || "var(--text)";
-    document.getElementById("simRate").textContent = "Taxa: R$" + fmt4(rate);
+    document.getElementById("simBrlOutput").textContent = "R$ " + brl.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById("simBrlOutput").style.color = colors[zone] || "var(--text)";
+    document.getElementById("simRate").textContent = "Media: R$" + avgRate.toFixed(4);
   }
 
   function renderZones(rate) {
@@ -360,7 +377,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     }
     if (pts.length < 2) {
       // Show inline message instead of empty SVG
-      svg.innerHTML = '<text x="170" y="55" text-anchor="middle" fill="#3d5470" font-size="11" font-family="DM Mono">' +
+      svg.innerHTML = '<text x="170" y="55" text-anchor="middle" fill="#3d5470" font-size="11" font-family="Inter">' +
         (pts.length === 0 ? "Sem dados historicos" : "Aguardando mais dias para grafico") +
         '</text>';
       labels.innerHTML = "";
@@ -383,7 +400,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
       if (t.val >= min && t.val <= max) {
         var y = toY(t.val);
         html += '<line x1="0" y1="' + y + '" x2="' + W + '" y2="' + y + '" stroke="' + t.color + '" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>';
-        html += '<text x="' + (W - 2) + '" y="' + (y - 4) + '" text-anchor="end" fill="' + t.color + '" font-size="8" font-family="DM Mono">' + t.lbl + '</text>';
+        html += '<text x="' + (W - 2) + '" y="' + (y - 4) + '" text-anchor="end" fill="' + t.color + '" font-size="8" font-family="Inter">' + t.lbl + '</text>';
       }
     }
     var polyArr = [];
@@ -603,7 +620,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     var btn = document.getElementById("refreshBtn");
     if (btn) btn.addEventListener("click", doFetch);
 
-    var simInp = document.getElementById("simBrl");
+    var simInp = document.getElementById("simEurInput");
     if (simInp) simInp.addEventListener("input", simulate);
 
     renderChart();
