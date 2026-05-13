@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Envio PT">
+<meta name="theme-color" content="#050c18">
+<title>Envio para Portugal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050c18;--surf:#0b1525;--surf2:#0f1c30;--border:#131f35;--border2:#1a2a42;--text:#dde8f5;--muted:#3d5470;--dim:#213048;--great:#00d68f;--good:#4db8ff;--bad:#f59e0b;--worst:#ef4444}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh}
+body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset-bottom),24px)}
+.header{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 20px 10px;display:flex;align-items:center;justify-content:space-between}
+.header-title{font-family:'Fraunces',serif;font-size:18px;font-weight:800}
+.header-sub{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
+.live-pill{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:10px;color:var(--muted)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--great);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+#signalBanner{padding:16px 20px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border);transition:background .4s}
+.signal-emoji{font-size:12px;font-weight:700;font-family:'Fraunces',serif;color:var(--muted);background:var(--surf);border:1px solid var(--border2);padding:8px 12px;border-radius:10px;letter-spacing:.08em;min-width:54px;text-align:center;flex-shrink:0}
+.signal-title{font-family:'Fraunces',serif;font-weight:800;font-size:15px;margin-bottom:3px}
+.signal-desc{font-size:11px;line-height:1.5;color:var(--muted)}
+.scroll{padding:14px 14px 0;display:flex;flex-direction:column;gap:12px}
+.hero{background:var(--surf);border:1px solid var(--border);border-radius:18px;padding:20px 18px 16px}
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.hero-pair{font-size:10px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase}
+.hero-badge{font-size:10px;padding:3px 10px;border-radius:20px;font-weight:500}
+.rate-display{display:flex;align-items:baseline;gap:5px;margin-bottom:6px}
+.rate-prefix{font-size:20px;font-weight:300;opacity:.45}
+.rate-num{font-family:'Fraunces',serif;font-size:54px;font-weight:800;letter-spacing:-3px;line-height:1}
+.rate-change{font-size:12px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.change-chip{padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;border:1px solid var(--border2);color:var(--muted)}
+.simulator{background:var(--surf2);border:1px solid var(--border2);border-radius:12px;padding:14px}
+.sim-label{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-bottom:10px}
+.sim-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sim-input{flex:1;background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:15px;color:var(--text);-webkit-appearance:none;outline:none}
+.sim-currency{font-size:11px;color:var(--muted)}
+.sim-arrow{font-size:14px;color:var(--dim);text-align:center;margin:2px 0 8px}
+.sim-result{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
+.sim-result-val{font-family:'Fraunces',serif;font-size:20px;font-weight:700}
+.sim-result-lbl{font-size:10px;color:var(--muted)}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:18px;padding:16px}
+.card-title{font-size:10px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px}
+.zone-list{display:flex;flex-direction:column;gap:8px}
+.zone-item{border-radius:12px;border:1px solid;padding:12px 14px;display:flex;justify-content:space-between;align-items:center}
+.zone-left{display:flex;flex-direction:column;gap:3px}
+.zone-name{font-size:13px;font-weight:500}
+.zone-sub{font-size:10px;color:var(--muted)}
+.zone-right{text-align:right}
+.zone-price{font-family:'Fraunces',serif;font-size:17px;font-weight:700}
+.zone-status{font-size:9px;margin-top:3px;padding:2px 8px;border-radius:10px;display:inline-block;letter-spacing:.08em}
+.zone-great{background:rgba(0,214,143,.1);border-color:rgba(0,214,143,.25)}
+.zone-great .zone-name,.zone-great .zone-price{color:var(--great)}
+.zone-good{background:rgba(77,184,255,.1);border-color:rgba(77,184,255,.2)}
+.zone-good .zone-name,.zone-good .zone-price{color:var(--good)}
+.zone-bad{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.2)}
+.zone-bad .zone-name,.zone-bad .zone-price{color:var(--bad)}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.insight-box{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px}
+.insight-lbl{font-size:9px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:5px}
+.insight-val{font-size:14px;font-weight:500}
+.chart-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-top:8px;padding:0 2px}
+.hist-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--border);gap:10px}
+.hist-row:last-child{border-bottom:none}
+.hist-date{font-size:11px;color:var(--muted);width:46px;flex-shrink:0}
+.hist-rate{font-family:'Fraunces',serif;font-weight:600;font-size:17px;flex:1}
+.hist-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.hist-chg{font-size:11px}
+.hist-tag{font-size:9px;padding:1px 7px;border-radius:10px}
+.refresh-btn{width:100%;background:var(--surf);border:1px solid var(--border2);color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.1em;padding:16px;border-radius:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-appearance:none}
+.refresh-btn:active{transform:scale(.98)}
+.refresh-btn:disabled{opacity:.5}
+.spin{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tip{background:rgba(77,184,255,.07);border:1px solid rgba(77,184,255,.18);border-radius:14px;padding:14px;font-size:11px;color:#6aaee8;line-height:1.6;display:flex;gap:10px;align-items:flex-start}
+.src-note{font-size:9px;color:var(--dim);text-align:center;letter-spacing:.1em;padding:8px}
+#debugLog{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px;font-size:10px;color:var(--muted);line-height:1.5;font-family:monospace;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">BR &gt; PT &middot; Envio</div>
+    <div class="header-sub">Monitor EUR / BRL</div>
+  </div>
+  <div class="live-pill"><div class="dot" id="liveDot"></div><span id="liveTime">--:--</span></div>
+</div>
+
+<div id="signalBanner">
+  <div class="signal-emoji">...</div>
+  <div>
+    <div class="signal-title" id="signalTitle" style="color:var(--muted)">Iniciando</div>
+    <div class="signal-desc" id="signalDesc">Carregando aplicativo</div>
+  </div>
+</div>
+
+<div class="scroll">
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-pair">EUR / BRL</div>
+      <div class="hero-badge" id="heroBadge">--</div>
+    </div>
+    <div class="rate-display"><span class="rate-prefix">R$</span><span class="rate-num" id="rateNum">--</span></div>
+    <div class="rate-change">
+      <span class="change-chip" id="changeChip">--</span>
+      <span style="font-size:10px;color:var(--muted)" id="rateDate">Aguardando</span>
+    </div>
+    <div class="simulator">
+      <div class="sim-label">Simular Envio</div>
+      <div class="sim-row">
+        <input class="sim-input" type="number" id="simBrl" value="1000" inputmode="decimal">
+        <span class="sim-currency">R$ BRL</span>
+      </div>
+      <div class="sim-arrow">converte em</div>
+      <div class="sim-result">
+        <div>
+          <div class="sim-result-val" id="simEur" style="color:var(--muted)">EUR --</div>
+          <div class="sim-result-lbl">euros recebidos em Portugal</div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);text-align:right" id="simRate">Taxa: --</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Zonas de Envio</div>
+    <div class="zone-list">
+      <div class="zone-item zone-great">
+        <div class="zone-left"><div class="zone-name">Oportunidade Rara</div><div class="zone-sub">Euro abaixo de R$ 5,50</div></div>
+        <div class="zone-right"><div class="zone-price">5,50</div><div class="zone-status" id="st550" style="background:rgba(74,85,104,.15);color:var(--muted)">AGUARDANDO</div></div>
+      </div>
+      <div class="zone-item zone-good">
+        <div class="zone-left"><div class="zone-name">Boa Hora para Enviar</div><div class="zone-sub">Euro abaixo de R$ 5,80</div></div>
+        <div class="zone-right"><div class="zone-price">&lt; 5,80</div><div class="zone-status" id="st580" style="background:rgba(74,85,104,.15);color:var(--muted)">AGUARDANDO</div></div>
+      </div>
+      <div class="zone-item zone-bad">
+        <div class="zone-left"><div class="zone-name">Cambio Desfavoravel</div><div class="zone-sub">Euro acima de R$ 5,90</div></div>
+        <div class="zone-right"><div class="zone-price">&gt; 5,90</div><div class="zone-status" id="st590" style="background:rgba(74,85,104,.15);color:var(--muted)">AGUARDANDO</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Analise</div>
+    <div class="insight-grid">
+      <div class="insight-box"><div class="insight-lbl">Menor</div><div class="insight-val" id="weekLow" style="color:var(--great)">--</div></div>
+      <div class="insight-box"><div class="insight-lbl">Maior</div><div class="insight-val" id="weekHigh" style="color:var(--bad)">--</div></div>
+      <div class="insight-box"><div class="insight-lbl">Media</div><div class="insight-val" id="weekAvg">--</div></div>
+      <div class="insight-box"><div class="insight-lbl">Tendencia</div><div class="insight-val" id="weekTrend">--</div></div>
+    </div>
+    <div id="trendAdvice" style="margin-top:10px;font-size:11px;line-height:1.6;color:var(--muted);padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--border);min-height:18px"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Grafico 7 dias</div>
+    <svg id="sparkline" width="100%" height="110" viewBox="0 0 340 110" preserveAspectRatio="none" style="overflow:visible"></svg>
+    <div class="chart-labels" id="chartLabels"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Historico</div>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Diagnostico</div>
+    <div id="debugLog">App iniciando...</div>
+  </div>
+
+  <div class="tip">
+    <span style="font-size:18px;flex-shrink:0">i</span>
+    <div><strong style="color:#a0c8f0">Instalar no iPhone:</strong><br>Safari &gt; Compartilhar &gt; Adicionar a Tela de Inicio &gt; Adicionar.</div>
+  </div>
+
+  <button class="refresh-btn" id="refreshBtn"><span id="refreshIcon">&#8635;</span> ATUALIZAR</button>
+  <div class="src-note">Fontes: Frankfurter.dev + jsDelivr CDN</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ============ GLOBAL ERROR CAPTURE ============
+  var debugLines = [];
+  function log(msg) {
+    try {
+      var ts = new Date().toLocaleTimeString("pt-BR");
+      debugLines.unshift("[" + ts + "] " + String(msg));
+      if (debugLines.length > 25) debugLines.length = 25;
+      var el = document.getElementById("debugLog");
+      if (el) el.textContent = debugLines.join("\n");
+    } catch (e) {}
+  }
+
+  window.addEventListener("error", function (ev) {
+    var msg = ev && ev.message ? ev.message : "(unknown)";
+    var src = ev && ev.filename ? " @ " + ev.filename + ":" + ev.lineno : "";
+    log("JS ERROR: " + msg + src);
+  });
+  window.addEventListener("unhandledrejection", function (ev) {
+    var r = ev && ev.reason;
+    var msg = r && r.message ? r.message : String(r);
+    log("PROMISE REJ: " + msg);
+  });
+
+  // ============ STATE ============
+  var ZONES = { rare: 5.50, good: 5.80, bad: 5.90 };
+  var history = [];
+  var currentRate = null;
+  var loading = false;
+
+  // ============ HELPERS ============
+  function fmt4(n) { return (n != null && !isNaN(n)) ? Number(n).toFixed(4) : "--"; }
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  function isoDate(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+  function brDate(iso) { var p = String(iso).split("-"); return p[2] + "/" + p[1]; }
+
+  function updateTime() {
+    var el = document.getElementById("liveTime");
+    if (el) el.textContent = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function classify(rate) {
+    if (rate == null || isNaN(rate)) return "neutral";
+    if (rate <= ZONES.rare) return "rare";
+    if (rate < ZONES.good) return "good";
+    if (rate >= ZONES.bad) return "bad";
+    return "neutral";
+  }
+
+  // ============ RENDER ============
+  function renderSignal(rate) {
+    var zone = classify(rate);
+    var cfg = {
+      rare:    { bg: "rgba(0,214,143,0.12)",   border: "rgba(0,214,143,0.3)",    emoji: "RARO", title: "OPORTUNIDADE RARA",   color: "var(--great)" },
+      good:    { bg: "rgba(77,184,255,0.1)",    border: "rgba(77,184,255,0.25)",  emoji: "BOM",  title: "BOA HORA PARA ENVIAR",color: "var(--good)" },
+      neutral: { bg: "rgba(136,150,170,0.07)",  border: "rgba(136,150,170,0.15)", emoji: "OK",   title: "CAMBIO NEUTRO",       color: "var(--text)" },
+      bad:     { bg: "rgba(245,158,11,0.1)",    border: "rgba(245,158,11,0.25)",  emoji: "ALTO", title: "CAMBIO DESFAVORAVEL", color: "var(--bad)" }
+    };
+    var s = cfg[zone] || cfg.neutral;
+    var descs = {
+      rare:    "Euro a R$" + fmt4(rate) + ". Excepcional - voce envia muito mais euros!",
+      good:    "Euro a R$" + fmt4(rate) + ", abaixo de R$5,80. Cambio favoravel.",
+      neutral: "Euro a R$" + fmt4(rate) + ". Faixa normal. Aguarde queda para enviar.",
+      bad:     "Euro a R$" + fmt4(rate) + ", acima de R$5,90. Momento caro."
+    };
+    var banner = document.getElementById("signalBanner");
+    banner.style.background = s.bg;
+    banner.style.borderBottom = "1px solid " + s.border;
+    var em = banner.querySelector(".signal-emoji");
+    em.textContent = s.emoji;
+    em.style.color = s.color;
+    em.style.borderColor = s.border;
+    document.getElementById("signalTitle").textContent = s.title;
+    document.getElementById("signalTitle").style.color = s.color;
+    document.getElementById("signalDesc").textContent = descs[zone] || descs.neutral;
+  }
+
+  function renderHero(data, prevRate) {
+    var rate = data.rate, zone = classify(rate);
+    var colors = { rare: "var(--great)", good: "var(--good)", neutral: "var(--text)", bad: "var(--bad)" };
+    var labels = { rare: "OTIMO", good: "FAVORAVEL", neutral: "NEUTRO", bad: "DESFAVORAVEL" };
+    var bgMap = { rare: "rgba(0,214,143,0.13)", good: "rgba(77,184,255,0.1)", neutral: "rgba(136,150,170,0.08)", bad: "rgba(245,158,11,0.1)" };
+    var color = colors[zone] || "var(--text)";
+
+    document.getElementById("rateNum").textContent = fmt4(rate);
+    document.getElementById("rateNum").style.color = color;
+    document.getElementById("rateDate").textContent = data.date + " " + new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+    var badge = document.getElementById("heroBadge");
+    badge.textContent = labels[zone] || "--";
+    badge.style.color = color;
+    badge.style.background = bgMap[zone] || "transparent";
+    badge.style.border = "1px solid " + color + "44";
+
+    var chip = document.getElementById("changeChip");
+    if (prevRate != null && !isNaN(prevRate) && prevRate !== rate) {
+      var d = rate - prevRate;
+      var p = ((d / prevRate) * 100).toFixed(2);
+      chip.textContent = (d < 0 ? "v " : "^ ") + (d >= 0 ? "+" : "") + d.toFixed(4) + " (" + p + "%)";
+      chip.style.background = d < 0 ? "rgba(0,214,143,0.12)" : "rgba(245,158,11,0.1)";
+      chip.style.color = d < 0 ? "var(--great)" : "var(--bad)";
+    } else {
+      chip.textContent = "--";
+    }
+    simulate();
+  }
+
+  function simulate() {
+    var inp = document.getElementById("simBrl");
+    if (!inp) return;
+    var brl = parseFloat(inp.value) || 0;
+    var rate = currentRate ? currentRate.rate : null;
+    if (!rate || !brl) return;
+    var eur = brl / rate;
+    var zone = classify(rate);
+    var colors = { rare: "var(--great)", good: "var(--good)", neutral: "var(--text)", bad: "var(--bad)" };
+    document.getElementById("simEur").textContent = "EUR " + eur.toFixed(2);
+    document.getElementById("simEur").style.color = colors[zone] || "var(--text)";
+    document.getElementById("simRate").textContent = "Taxa: R$" + fmt4(rate);
+  }
+
+  function renderZones(rate) {
+    var inactive = "rgba(74,85,104,0.12)";
+    var s550 = document.getElementById("st550");
+    if (rate <= ZONES.rare) { s550.textContent = "ATIVO"; s550.style.background = "rgba(0,214,143,0.2)"; s550.style.color = "var(--great)"; }
+    else { s550.textContent = "+" + (rate - ZONES.rare).toFixed(2) + " acima"; s550.style.background = inactive; s550.style.color = "var(--muted)"; }
+    var s580 = document.getElementById("st580");
+    if (rate < ZONES.good) { s580.textContent = "ATIVO"; s580.style.background = "rgba(77,184,255,0.15)"; s580.style.color = "var(--good)"; }
+    else { s580.textContent = "+" + (rate - ZONES.good).toFixed(2) + " acima"; s580.style.background = inactive; s580.style.color = "var(--muted)"; }
+    var s590 = document.getElementById("st590");
+    if (rate >= ZONES.bad) { s590.textContent = "ATIVA"; s590.style.background = "rgba(245,158,11,0.15)"; s590.style.color = "var(--bad)"; }
+    else { s590.textContent = (ZONES.bad - rate).toFixed(2) + " abaixo"; s590.style.background = inactive; s590.style.color = "var(--muted)"; }
+  }
+
+  function renderInsights(rate) {
+    var rates = [];
+    for (var i = 0; i < history.length; i++) {
+      if (history[i].rate != null && !isNaN(history[i].rate)) rates.push(history[i].rate);
+    }
+    if (!rates.length) return;
+    var low = rates[0], high = rates[0], sum = 0;
+    for (var j = 0; j < rates.length; j++) {
+      if (rates[j] < low) low = rates[j];
+      if (rates[j] > high) high = rates[j];
+      sum += rates[j];
+    }
+    var avg = sum / rates.length;
+    var last3 = rates.slice(-3);
+    var trend = last3.length >= 2 ? last3[last3.length - 1] - last3[0] : 0;
+    var trendUp = trend > 0.01, trendDn = trend < -0.01;
+
+    document.getElementById("weekLow").textContent = "R$ " + low.toFixed(4);
+    document.getElementById("weekHigh").textContent = "R$ " + high.toFixed(4);
+    document.getElementById("weekAvg").textContent = "R$ " + avg.toFixed(4);
+    document.getElementById("weekAvg").style.color = avg < ZONES.good ? "var(--good)" : avg >= ZONES.bad ? "var(--bad)" : "var(--text)";
+    document.getElementById("weekTrend").textContent = trendUp ? "Subindo" : trendDn ? "Caindo" : "Lateral";
+    document.getElementById("weekTrend").style.color = trendUp ? "var(--bad)" : trendDn ? "var(--great)" : "var(--muted)";
+
+    var advice = "Cambio estavel. Monitore e envie quando cair abaixo de R$ 5,80.";
+    if (rate <= ZONES.rare) advice = "Oportunidade rara! Euro na minima. Envie agora!";
+    else if (trendDn && rate >= ZONES.good) advice = "Cambio em queda - pode atingir zona favoravel em breve.";
+    else if (trendDn && rate < ZONES.good) advice = "Caindo e ja favoravel - otimo momento para enviar!";
+    else if (trendUp && rate >= ZONES.bad) advice = "Subindo e caro - aguarde reversao.";
+    else if (trendUp && rate < ZONES.good) advice = "Ainda favoravel mas subindo - nao espere muito!";
+    document.getElementById("trendAdvice").textContent = advice;
+  }
+
+  function renderChart() {
+    var svg = document.getElementById("sparkline");
+    var labels = document.getElementById("chartLabels");
+    var pts = [];
+    for (var i = 0; i < history.length; i++) {
+      if (history[i].rate != null && !isNaN(history[i].rate)) pts.push(history[i]);
+    }
+    if (pts.length < 2) {
+      // Show inline message instead of empty SVG
+      svg.innerHTML = '<text x="170" y="55" text-anchor="middle" fill="#3d5470" font-size="11" font-family="DM Mono">' +
+        (pts.length === 0 ? "Sem dados historicos" : "Aguardando mais dias para grafico") +
+        '</text>';
+      labels.innerHTML = "";
+      return;
+    }
+    var W = 340, H = 100;
+    var vals = pts.map(function (h) { return h.rate; });
+    var min = Math.min.apply(null, vals) - 0.06;
+    var max = Math.max.apply(null, vals) + 0.06;
+    function toX(i) { return (i / (pts.length - 1)) * W; }
+    function toY(v) { return H - ((v - min) / (max - min)) * H; }
+    var thresh = [
+      { val: ZONES.rare, color: "#00d68f", lbl: "5,50" },
+      { val: ZONES.good, color: "#4db8ff", lbl: "5,80" },
+      { val: ZONES.bad,  color: "#f59e0b", lbl: "5,90" }
+    ];
+    var html = '<defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4db8ff" stop-opacity="0.22"/><stop offset="100%" stop-color="#4db8ff" stop-opacity="0.02"/></linearGradient></defs>';
+    for (var k = 0; k < thresh.length; k++) {
+      var t = thresh[k];
+      if (t.val >= min && t.val <= max) {
+        var y = toY(t.val);
+        html += '<line x1="0" y1="' + y + '" x2="' + W + '" y2="' + y + '" stroke="' + t.color + '" stroke-width="1" stroke-dasharray="5,4" opacity="0.5"/>';
+        html += '<text x="' + (W - 2) + '" y="' + (y - 4) + '" text-anchor="end" fill="' + t.color + '" font-size="8" font-family="DM Mono">' + t.lbl + '</text>';
+      }
+    }
+    var polyArr = [];
+    for (var m = 0; m < pts.length; m++) polyArr.push(toX(m) + "," + toY(pts[m].rate));
+    var polyPts = polyArr.join(" ");
+    html += '<polygon points="0,' + H + ' ' + polyPts + ' ' + W + ',' + H + '" fill="url(#g1)"/>';
+    html += '<polyline points="' + polyPts + '" fill="none" stroke="#4db8ff" stroke-width="1.8" stroke-linejoin="round"/>';
+    var dcMap = { rare: "#00d68f", good: "#4db8ff", neutral: "#8896aa", bad: "#f59e0b" };
+    for (var n = 0; n < pts.length; n++) {
+      var dc = dcMap[classify(pts[n].rate)] || "#4db8ff";
+      html += '<circle cx="' + toX(n) + '" cy="' + toY(pts[n].rate) + '" r="3.5" fill="' + dc + '" stroke="#050c18" stroke-width="1.5"/>';
+    }
+    svg.innerHTML = html;
+    var labelArr = [];
+    for (var o = 0; o < pts.length; o++) labelArr.push("<span>" + pts[o].date + "</span>");
+    labels.innerHTML = labelArr.join("");
+  }
+
+  function renderHistory() {
+    var el = document.getElementById("historyList");
+    var rows = history.slice().reverse();
+    var out = [];
+    for (var i = 0; i < rows.length; i++) {
+      var h = rows[i];
+      if (!h.rate) continue;
+      var prev = rows[i + 1];
+      var d = (prev && prev.rate) ? h.rate - prev.rate : null;
+      var zone = classify(h.rate);
+      var rateColors = { rare: "var(--great)", good: "var(--good)", neutral: "var(--text)", bad: "var(--bad)" };
+      var rateC = rateColors[zone] || "var(--text)";
+      var tagCfg = {
+        rare:    ["Otimo",  "rgba(0,214,143,0.1)",   "#00d68f"],
+        good:    ["Bom",    "rgba(77,184,255,0.1)",   "#4db8ff"],
+        neutral: ["Neutro", "rgba(136,150,170,0.07)", "#8896aa"],
+        bad:     ["Caro",   "rgba(245,158,11,0.1)",   "#f59e0b"]
+      };
+      var t = tagCfg[zone] || tagCfg.neutral;
+      var chgStr = (d !== null)
+        ? '<span style="color:' + (d < 0 ? "var(--great)" : "var(--bad)") + '">' + (d < 0 ? "v " : "^ ") + Math.abs(d).toFixed(4) + '</span>'
+        : '<span style="color:var(--dim)">--</span>';
+      out.push(
+        '<div class="hist-row"><div class="hist-date">' + h.date + '</div>' +
+        '<div class="hist-rate" style="color:' + rateC + '">R$ ' + fmt4(h.rate) + '</div>' +
+        '<div class="hist-right"><div class="hist-chg">' + chgStr + '</div>' +
+        '<span class="hist-tag" style="background:' + t[1] + ';color:' + t[2] + ';border:1px solid ' + t[2] + '33">' + t[0] + '</span></div></div>'
+      );
+    }
+    el.innerHTML = out.join("");
+  }
+
+  // ============ DATA FETCH (simplificado) ============
+  function fetchJson(url, label) {
+    log("GET " + label);
+    return fetch(url, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error(label + ": HTTP " + r.status);
+      return r.json();
+    });
+  }
+
+  function fetchLatest() {
+    // Try Frankfurter first
+    return fetchJson("https://api.frankfurter.dev/v1/latest?base=EUR&symbols=BRL", "Frankfurter latest")
+      .then(function (j) {
+        if (!j || !j.rates || j.rates.BRL == null) throw new Error("Frankfurter: BRL ausente");
+        var rate = parseFloat(j.rates.BRL);
+        log("OK Frankfurter: " + rate.toFixed(4));
+        return { rate: rate, date: brDate(j.date), isoDate: j.date };
+      })
+      .catch(function (err) {
+        log("Falha Frankfurter: " + err.message);
+        // Fallback to jsDelivr
+        return fetchJson("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json", "jsDelivr latest")
+          .then(function (j) {
+            if (!j || !j.eur || j.eur.brl == null) throw new Error("jsDelivr: BRL ausente");
+            var rate = parseFloat(j.eur.brl);
+            var iso = j.date || isoDate(new Date());
+            log("OK jsDelivr: " + rate.toFixed(4));
+            return { rate: rate, date: brDate(iso), isoDate: iso };
+          });
+      });
+  }
+
+  function fetchFrankfurterHistory() {
+    // Use explicit from..to range (last 14 days to ensure enough business days)
+    var today = new Date();
+    var from = new Date();
+    from.setDate(today.getDate() - 14);
+    var url = "https://api.frankfurter.dev/v1/" + isoDate(from) + ".." + isoDate(today) + "?base=EUR&symbols=BRL";
+    return fetchJson(url, "Frankfurter historico").then(function (j) {
+      if (!j || !j.rates) throw new Error("Frankfurter hist: rates ausente");
+      var out = [];
+      var keys = Object.keys(j.rates).sort();
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        var entry = j.rates[key];
+        if (entry && entry.BRL != null) {
+          out.push({ rate: parseFloat(entry.BRL), date: brDate(key), isoDate: key });
+        }
+      }
+      if (out.length === 0) throw new Error("Frankfurter hist: vazio");
+      log("Frankfurter historico: " + out.length + " dias");
+      return out;
+    });
+  }
+
+  function fetchJsDelivrHistory() {
+    // Fetch last 10 calendar days individually from jsDelivr (CDN, fast)
+    log("Tentando jsDelivr para historico (10 dias)");
+    var today = new Date();
+    var promises = [];
+    for (var i = 9; i >= 0; i--) {
+      var d = new Date();
+      d.setDate(today.getDate() - i);
+      var iso = isoDate(d);
+      var url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@" + iso + "/v1/currencies/eur.json";
+      promises.push(
+        fetch(url, { cache: "no-store" })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (j) {
+            if (!j || !j.eur || j.eur.brl == null) return null;
+            var dateIso = j.date || iso;
+            return { rate: parseFloat(j.eur.brl), date: brDate(dateIso), isoDate: dateIso };
+          })
+          .catch(function () { return null; })
+      );
+    }
+    return Promise.all(promises).then(function (results) {
+      var valid = [];
+      var seen = {};
+      for (var k = 0; k < results.length; k++) {
+        var r = results[k];
+        if (r && !seen[r.isoDate]) {
+          seen[r.isoDate] = true;
+          valid.push(r);
+        }
+      }
+      valid.sort(function (a, b) { return a.isoDate < b.isoDate ? -1 : a.isoDate > b.isoDate ? 1 : 0; });
+      if (valid.length === 0) throw new Error("jsDelivr hist: vazio");
+      log("jsDelivr historico: " + valid.length + " dias");
+      return valid;
+    });
+  }
+
+  function fetchHistorySeries() {
+    // Try Frankfurter first; fall back to jsDelivr if it fails
+    return fetchFrankfurterHistory().catch(function (err) {
+      log("Falha Frankfurter hist: " + err.message);
+      return fetchJsDelivrHistory().catch(function (err2) {
+        log("Falha jsDelivr hist: " + err2.message);
+        return []; // graceful empty fallback - app still works with single point
+      });
+    });
+  }
+
+  function doFetch() {
+    if (loading) return;
+    loading = true;
+    var btn = document.getElementById("refreshBtn");
+    var icon = document.getElementById("refreshIcon");
+    btn.disabled = true;
+    icon.className = "spin";
+    document.getElementById("liveDot").style.background = "var(--bad)";
+    document.getElementById("signalTitle").textContent = "Buscando cotacao";
+    document.getElementById("signalDesc").textContent = "Consultando fontes";
+    log("--- Iniciando atualizacao ---");
+
+    fetchLatest()
+      .then(function (today) {
+        return fetchHistorySeries().then(function (histList) {
+          // Merge today into history (idempotent)
+          var found = false;
+          for (var i = 0; i < histList.length; i++) {
+            if (histList[i].isoDate === today.isoDate) {
+              histList[i] = today;
+              found = true;
+              break;
+            }
+          }
+          if (!found) histList.push(today);
+          histList.sort(function (a, b) { return a.isoDate < b.isoDate ? -1 : a.isoDate > b.isoDate ? 1 : 0; });
+          history = histList.slice(-7);
+          currentRate = today;
+          return today;
+        });
+      })
+      .then(function (today) {
+        var prev = history.length >= 2 ? history[history.length - 2].rate : null;
+        renderSignal(today.rate);
+        renderHero(today, prev);
+        renderZones(today.rate);
+        renderInsights(today.rate);
+        renderChart();
+        renderHistory();
+        document.getElementById("liveDot").style.background = "var(--great)";
+        log("=== Atualizacao OK ===");
+      })
+      .catch(function (err) {
+        log("ERRO FINAL: " + (err && err.message ? err.message : String(err)));
+        document.getElementById("signalTitle").textContent = "Erro";
+        document.getElementById("signalTitle").style.color = "var(--worst)";
+        document.getElementById("signalDesc").textContent = "Falha ao buscar. Veja diagnostico abaixo.";
+        document.getElementById("liveDot").style.background = "var(--worst)";
+      })
+      .then(function () {
+        loading = false;
+        btn.disabled = false;
+        icon.className = "";
+      });
+  }
+
+  // ============ WIRE UP ============
+  function init() {
+    log("App pronto. Iniciando primeira busca.");
+    updateTime();
+    setInterval(updateTime, 30000);
+
+    var btn = document.getElementById("refreshBtn");
+    if (btn) btn.addEventListener("click", doFetch);
+
+    var simInp = document.getElementById("simBrl");
+    if (simInp) simInp.addEventListener("input", simulate);
+
+    renderChart();
+    renderHistory();
+    doFetch();
+    setInterval(doFetch, 5 * 60 * 1000);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
