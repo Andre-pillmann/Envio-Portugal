@@ -114,7 +114,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
       <span style="font-size:10px;color:var(--muted)" id="rateDate">Aguardando</span>
     </div>
     <div class="simulator">
-      <div class="sim-label">Simular Conversao (taxa media do dia)</div>
+      <div class="sim-label">Simular Compra (taxa venda em tempo real)</div>
       <div class="sim-row">
         <span class="sim-currency" style="min-width:54px">EUR &euro;</span>
         <input class="sim-input" type="number" id="simEurInput" value="100" inputmode="decimal" step="0.01">
@@ -294,35 +294,29 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     simulate();
   }
 
-  function getDailyAverage() {
-    // Average of recent days (last 3 if available, else current rate)
-    var rates = [];
-    for (var i = 0; i < history.length; i++) {
-      if (history[i].rate != null && !isNaN(history[i].rate)) rates.push(history[i].rate);
-    }
-    if (rates.length === 0) return currentRate ? currentRate.rate : null;
-    var recent = rates.slice(-3);
-    var sum = 0;
-    for (var j = 0; j < recent.length; j++) sum += recent[j];
-    return sum / recent.length;
-  }
+  // Stores BCB PTAX rate (cotacaoVenda for EUR)
+  var ptaxData = null; // { compra, venda, dataHora }
 
   function simulate() {
     var inp = document.getElementById("simEurInput");
     if (!inp) return;
     var eur = parseFloat(inp.value) || 0;
-    var avgRate = getDailyAverage();
-    if (!avgRate || !eur) {
+    var ptaxVenda = ptaxData ? ptaxData.venda : null;
+
+    if (!ptaxVenda || !eur) {
       document.getElementById("simBrlOutput").textContent = "R$ --";
-      document.getElementById("simRate").textContent = "Media: --";
+      document.getElementById("simRate").textContent = ptaxVenda ? "Taxa: R$" + ptaxVenda.toFixed(4) : "Aguardando taxa...";
       return;
     }
-    var brl = eur * avgRate;
-    var zone = classify(avgRate);
+    var brl = eur * ptaxVenda;
+    var zone = classify(ptaxVenda);
     var colors = { rare: "var(--great)", good: "var(--good)", neutral: "var(--text)", bad: "var(--bad)" };
     document.getElementById("simBrlOutput").textContent = "R$ " + brl.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     document.getElementById("simBrlOutput").style.color = colors[zone] || "var(--text)";
-    document.getElementById("simRate").textContent = "Media: R$" + avgRate.toFixed(4);
+    var ptaxDate = ptaxData.dataHora ? ptaxData.dataHora.substring(0, 10).split("-").reverse().join("/") : "";
+    var ptaxTime = ptaxData.dataHora && ptaxData.dataHora.length >= 16 ? " " + ptaxData.dataHora.substring(11, 16) : "";
+    var label = ptaxData.estimated ? "Ref BCE " : "Venda ";
+    document.getElementById("simRate").textContent = label + ptaxDate + ptaxTime + ": R$ " + ptaxVenda.toFixed(4);
   }
 
   function renderZones(rate) {
@@ -466,99 +460,108 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     });
   }
 
-  function fetchLatest() {
-    // Try Frankfurter first
-    return fetchJson("https://api.frankfurter.dev/v1/latest?base=EUR&symbols=BRL", "Frankfurter latest")
-      .then(function (j) {
-        if (!j || !j.rates || j.rates.BRL == null) throw new Error("Frankfurter: BRL ausente");
-        var rate = parseFloat(j.rates.BRL);
-        log("OK Frankfurter: " + rate.toFixed(4));
-        return { rate: rate, date: brDate(j.date), isoDate: j.date };
-      })
-      .catch(function (err) {
-        log("Falha Frankfurter: " + err.message);
-        // Fallback to jsDelivr
-        return fetchJson("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/eur.json", "jsDelivr latest")
-          .then(function (j) {
-            if (!j || !j.eur || j.eur.brl == null) throw new Error("jsDelivr: BRL ausente");
-            var rate = parseFloat(j.eur.brl);
-            var iso = j.date || isoDate(new Date());
-            log("OK jsDelivr: " + rate.toFixed(4));
-            return { rate: rate, date: brDate(iso), isoDate: iso };
-          });
-      });
-  }
-
-  function fetchFrankfurterHistory() {
-    // Use explicit from..to range (last 14 days to ensure enough business days)
-    var today = new Date();
-    var from = new Date();
-    from.setDate(today.getDate() - 14);
-    var url = "https://api.frankfurter.dev/v1/" + isoDate(from) + ".." + isoDate(today) + "?base=EUR&symbols=BRL";
-    return fetchJson(url, "Frankfurter historico").then(function (j) {
-      if (!j || !j.rates) throw new Error("Frankfurter hist: rates ausente");
-      var out = [];
-      var keys = Object.keys(j.rates).sort();
-      for (var i = 0; i < keys.length; i++) {
-        var key = keys[i];
-        var entry = j.rates[key];
-        if (entry && entry.BRL != null) {
-          out.push({ rate: parseFloat(entry.BRL), date: brDate(key), isoDate: key });
-        }
-      }
-      if (out.length === 0) throw new Error("Frankfurter hist: vazio");
-      log("Frankfurter historico: " + out.length + " dias");
-      return out;
+  // Variant without cache-buster - for use with CORS proxies where appending
+  // params would corrupt the encoded target URL.
+  function fetchJsonRaw(url, label) {
+    log("GET " + label);
+    return fetch(url, { cache: "no-store" }).then(function (r) {
+      if (!r.ok) throw new Error(label + ": HTTP " + r.status);
+      return r.json();
     });
   }
 
-  function fetchJsDelivrHistory() {
-    // Fetch last 10 calendar days individually from jsDelivr (CDN, fast)
-    log("Tentando jsDelivr para historico (10 dias)");
-    var today = new Date();
-    var promises = [];
-    for (var i = 9; i >= 0; i--) {
-      var d = new Date();
-      d.setDate(today.getDate() - i);
-      var iso = isoDate(d);
-      var url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@" + iso + "/v1/currencies/eur.json?_t=" + Date.now();
-      promises.push(
-        fetch(url, { cache: "no-store" })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .then(function (j) {
-            if (!j || !j.eur || j.eur.brl == null) return null;
-            var dateIso = j.date || iso;
-            return { rate: parseFloat(j.eur.brl), date: brDate(dateIso), isoDate: dateIso };
-          })
-          .catch(function () { return null; })
-      );
-    }
-    return Promise.all(promises).then(function (results) {
-      var valid = [];
-      var seen = {};
-      for (var k = 0; k < results.length; k++) {
-        var r = results[k];
-        if (r && !seen[r.isoDate]) {
-          seen[r.isoDate] = true;
-          valid.push(r);
-        }
-      }
-      valid.sort(function (a, b) { return a.isoDate < b.isoDate ? -1 : a.isoDate > b.isoDate ? 1 : 0; });
-      if (valid.length === 0) throw new Error("jsDelivr hist: vazio");
-      log("jsDelivr historico: " + valid.length + " dias");
-      return valid;
+  // Stores live commercial rate data (used by simulator)
+  var liveAskData = null; // populated by fetchLatest
+
+  function fetchLatest() {
+    // Primary source: AwesomeAPI (Brazilian, real-time bid/ask)
+    var url = "https://economia.awesomeapi.com.br/json/last/EUR-BRL";
+
+    return fetchJson(url, "AwesomeAPI latest").then(function (j) {
+      if (!j || !j.EURBRL) throw new Error("AwesomeAPI: EURBRL ausente");
+      var d = j.EURBRL;
+      var bid = parseFloat(d.bid);
+      var ask = parseFloat(d.ask);
+      if (isNaN(bid)) throw new Error("AwesomeAPI: bid invalido");
+
+      // Build dates from timestamp
+      var ts = parseInt(d.timestamp, 10);
+      var dateObj = !isNaN(ts) ? new Date(ts * 1000) : new Date();
+      var iso = isoDate(dateObj);
+      var isoFull = iso + "T" + pad(dateObj.getHours()) + ":" + pad(dateObj.getMinutes()) + ":00";
+
+      // Store ask rate for simulator
+      liveAskData = {
+        compra: bid,
+        venda: ask,
+        dataHora: isoFull,
+        high: parseFloat(d.high),
+        low: parseFloat(d.low),
+        pctChange: parseFloat(d.pctChange)
+      };
+
+      log("OK AwesomeAPI: bid=" + bid.toFixed(4) + " ask=" + ask.toFixed(4));
+
+      // Return main rate (using mid bid for chart/zones consistency)
+      return { rate: bid, date: brDate(iso), isoDate: iso };
+    }).catch(function (err) {
+      log("Falha AwesomeAPI: " + err.message);
+      // Fallback to Frankfurter v2 (ECB reference)
+      return fetchJson("https://api.frankfurter.dev/v2/rate/EUR/BRL", "Frankfurter v2 fallback")
+        .then(function (j) {
+          if (!j || j.rate == null) throw new Error("Frankfurter v2: rate ausente");
+          var rate = parseFloat(j.rate);
+          log("OK Frankfurter v2 (fallback): " + rate.toFixed(4));
+          // Approximate ask rate from BCE reference (no real spread available)
+          liveAskData = {
+            compra: rate,
+            venda: rate,
+            dataHora: j.date + "T13:00:00",
+            estimated: true
+          };
+          return { rate: rate, date: brDate(j.date), isoDate: j.date };
+        });
     });
   }
 
   function fetchHistorySeries() {
-    // Try Frankfurter first; fall back to jsDelivr if it fails
-    return fetchFrankfurterHistory().catch(function (err) {
-      log("Falha Frankfurter hist: " + err.message);
-      return fetchJsDelivrHistory().catch(function (err2) {
-        log("Falha jsDelivr hist: " + err2.message);
-        return []; // graceful empty fallback - app still works with single point
-      });
+    // Use AwesomeAPI daily endpoint (returns 15 most recent business days)
+    var url = "https://economia.awesomeapi.com.br/json/daily/EUR-BRL/15";
+
+    return fetchJson(url, "AwesomeAPI historico").then(function (arr) {
+      if (!Array.isArray(arr) || arr.length === 0) {
+        throw new Error("AwesomeAPI hist: array vazio");
+      }
+      var out = [];
+      var seen = {};
+      for (var i = 0; i < arr.length; i++) {
+        var d = arr[i];
+        var ts = parseInt(d.timestamp, 10);
+        if (isNaN(ts)) continue;
+        var dateObj = new Date(ts * 1000);
+        var iso = isoDate(dateObj);
+        if (seen[iso]) continue;
+        seen[iso] = true;
+        var rate = parseFloat(d.bid);
+        if (isNaN(rate)) continue;
+        out.push({ rate: rate, date: brDate(iso), isoDate: iso });
+      }
+      // Sort ASC by date
+      out.sort(function (a, b) { return a.isoDate < b.isoDate ? -1 : a.isoDate > b.isoDate ? 1 : 0; });
+      log("AwesomeAPI historico: " + out.length + " dias");
+      return out;
+    }).catch(function (err) {
+      log("Falha historico: " + err.message);
+      return []; // graceful empty fallback
     });
+  }
+
+  // Simulator data source - uses liveAskData populated by fetchLatest
+  function fetchPTAX() {
+    if (liveAskData) {
+      return new Promise(function (resolve) { resolve(liveAskData); });
+    }
+    return new Promise(function (_, reject) { reject(new Error("Sem dados de venda")); });
   }
 
   function doFetch() {
@@ -602,6 +605,12 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
         renderHistory();
         document.getElementById("liveDot").style.background = "var(--great)";
         log("=== Atualizacao OK ===");
+
+        // liveAskData was populated by fetchLatest - just assign to ptaxData
+        if (liveAskData) {
+          ptaxData = liveAskData;
+          simulate();
+        }
       })
       .catch(function (err) {
         log("ERRO FINAL: " + (err && err.message ? err.message : String(err)));
