@@ -2,6 +2,9 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -454,7 +457,10 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
   // ============ DATA FETCH (simplificado) ============
   function fetchJson(url, label) {
     log("GET " + label);
-    return fetch(url, { cache: "no-store" }).then(function (r) {
+    // Cache-buster on URL is enough; custom headers would trigger CORS preflight
+    var sep = url.indexOf("?") >= 0 ? "&" : "?";
+    var bustUrl = url + sep + "_t=" + Date.now();
+    return fetch(bustUrl, { cache: "no-store" }).then(function (r) {
       if (!r.ok) throw new Error(label + ": HTTP " + r.status);
       return r.json();
     });
@@ -515,7 +521,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
       var d = new Date();
       d.setDate(today.getDate() - i);
       var iso = isoDate(d);
-      var url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@" + iso + "/v1/currencies/eur.json";
+      var url = "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@" + iso + "/v1/currencies/eur.json?_t=" + Date.now();
       promises.push(
         fetch(url, { cache: "no-store" })
           .then(function (r) { return r.ok ? r.json() : null; })
@@ -622,6 +628,30 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
 
     var simInp = document.getElementById("simEurInput");
     if (simInp) simInp.addEventListener("input", simulate);
+
+    // Refresh when app returns to foreground (critical for iOS home-screen apps)
+    var lastFetchTime = Date.now();
+    function maybeRefresh() {
+      var now = Date.now();
+      // Only refetch if more than 2 minutes have passed
+      if (now - lastFetchTime > 2 * 60 * 1000) {
+        log("App voltou ao primeiro plano - atualizando");
+        lastFetchTime = now;
+        doFetch();
+      }
+    }
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) maybeRefresh();
+    });
+    window.addEventListener("focus", maybeRefresh);
+    window.addEventListener("pageshow", function (ev) {
+      // pageshow fires on bfcache restore too (very common on iOS)
+      if (ev.persisted) {
+        log("Restaurado do cache - atualizando");
+        lastFetchTime = Date.now();
+        doFetch();
+      }
+    });
 
     renderChart();
     renderHistory();
