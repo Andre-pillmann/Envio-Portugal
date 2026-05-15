@@ -174,6 +174,16 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
   </div>
 
   <div class="card">
+    <div class="card-title">Tendencia · proximos 7 dias</div>
+    <svg id="forecastChart" width="100%" height="130" viewBox="0 0 340 130" preserveAspectRatio="none" style="overflow:visible"></svg>
+    <div class="chart-labels" id="forecastLabels"></div>
+    <div id="forecastSummary" style="margin-top:12px;font-size:11px;color:var(--muted);padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--border);line-height:1.6"></div>
+    <div style="margin-top:8px;font-size:9px;color:var(--dim);text-align:center;letter-spacing:.08em;line-height:1.4">
+      &#9888; Projecao estatistica baseada em regressao linear. Cambio nao e previsivel.<br>Apenas referencia, nao tome decisoes apenas com isto.
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-title">Historico</div>
     <div id="historyList"></div>
   </div>
@@ -423,6 +433,211 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     labels.innerHTML = labelArr.join("");
   }
 
+  // Linear regression for trend forecast
+  // Returns { slope, intercept, stdDev } where slope is rate-change per day
+  function linearRegression(rates) {
+    var n = rates.length;
+    if (n < 2) return null;
+    var sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    for (var i = 0; i < n; i++) {
+      sumX += i;
+      sumY += rates[i];
+      sumXY += i * rates[i];
+      sumXX += i * i;
+    }
+    var denom = n * sumXX - sumX * sumX;
+    if (denom === 0) return null;
+    var slope = (n * sumXY - sumX * sumY) / denom;
+    var intercept = (sumY - slope * sumX) / n;
+    // Calculate std deviation of daily changes (volatility)
+    var changes = [];
+    for (var j = 1; j < n; j++) changes.push(rates[j] - rates[j - 1]);
+    var meanChg = 0;
+    for (var k = 0; k < changes.length; k++) meanChg += changes[k];
+    meanChg = changes.length ? meanChg / changes.length : 0;
+    var variance = 0;
+    for (var l = 0; l < changes.length; l++) variance += Math.pow(changes[l] - meanChg, 2);
+    variance = changes.length > 1 ? variance / (changes.length - 1) : 0;
+    var stdDev = Math.sqrt(variance);
+    return { slope: slope, intercept: intercept, stdDev: stdDev };
+  }
+
+  function renderForecast() {
+    var svg = document.getElementById("forecastChart");
+    var labels = document.getElementById("forecastLabels");
+    var summary = document.getElementById("forecastSummary");
+    if (!svg || !labels || !summary) return;
+
+    // Get historical rates
+    var hist = [];
+    for (var i = 0; i < history.length; i++) {
+      if (history[i].rate != null && !isNaN(history[i].rate)) hist.push(history[i]);
+    }
+    if (hist.length < 3) {
+      svg.innerHTML = '<text x="170" y="65" text-anchor="middle" fill="#3d5470" font-size="11" font-family="Inter">Aguardando mais dias para projetar tendencia</text>';
+      labels.innerHTML = "";
+      summary.textContent = "";
+      return;
+    }
+
+    var rates = hist.map(function (h) { return h.rate; });
+    var reg = linearRegression(rates);
+    if (!reg) return;
+
+    // Generate forecast for next 7 days
+    var nDays = 7;
+    var forecast = [];
+    var lastDate = new Date();
+    // Parse last historical isoDate
+    var lastIso = hist[hist.length - 1].isoDate;
+    if (lastIso) {
+      var parts = lastIso.split("-");
+      lastDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+
+    for (var d = 1; d <= nDays; d++) {
+      var futureX = hist.length - 1 + d;
+      var futureRate = reg.intercept + reg.slope * futureX;
+      // Confidence band grows with sqrt(days_ahead) - typical for random walk
+      var confidence = reg.stdDev * Math.sqrt(d) * 2; // ~95% band
+      var futureDate = new Date(lastDate);
+      futureDate.setDate(lastDate.getDate() + d);
+      forecast.push({
+        rate: futureRate,
+        upper: futureRate + confidence,
+        lower: futureRate - confidence,
+        date: brDate(isoDate(futureDate)),
+        isoDate: isoDate(futureDate)
+      });
+    }
+
+    // Build chart with both historical and forecast
+    var W = 340, H = 110;
+    var allPoints = hist.concat(forecast.map(function (f) {
+      return { rate: f.rate, upper: f.upper, lower: f.lower, date: f.date, isForecast: true };
+    }));
+
+    // Find min/max for scaling, considering confidence band
+    var allVals = [];
+    for (var p = 0; p < hist.length; p++) allVals.push(hist[p].rate);
+    for (var q = 0; q < forecast.length; q++) {
+      allVals.push(forecast[q].upper);
+      allVals.push(forecast[q].lower);
+    }
+    var minV = Math.min.apply(null, allVals) - 0.08;
+    var maxV = Math.max.apply(null, allVals) + 0.08;
+    var totalPts = hist.length + forecast.length;
+    function toX(idx) { return (idx / (totalPts - 1)) * W; }
+    function toY(v) { return H - ((v - minV) / (maxV - minV)) * H; }
+
+    var html = '<defs>' +
+      '<linearGradient id="fgrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#a855f7" stop-opacity="0.25"/>' +
+      '<stop offset="100%" stop-color="#a855f7" stop-opacity="0.02"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="bandGrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#a855f7" stop-opacity="0.18"/>' +
+      '<stop offset="100%" stop-color="#a855f7" stop-opacity="0.05"/>' +
+      '</linearGradient>' +
+      '</defs>';
+
+    // Threshold lines (5.50, 5.80, 5.90)
+    var thresh = [
+      { val: ZONES.rare, color: "#00d68f", lbl: "5,50" },
+      { val: ZONES.good, color: "#4db8ff", lbl: "5,80" },
+      { val: ZONES.bad,  color: "#f59e0b", lbl: "5,90" }
+    ];
+    for (var t = 0; t < thresh.length; t++) {
+      if (thresh[t].val >= minV && thresh[t].val <= maxV) {
+        var ty = toY(thresh[t].val);
+        html += '<line x1="0" y1="' + ty + '" x2="' + W + '" y2="' + ty + '" stroke="' + thresh[t].color + '" stroke-width="1" stroke-dasharray="5,4" opacity="0.35"/>';
+        html += '<text x="' + (W - 2) + '" y="' + (ty - 3) + '" text-anchor="end" fill="' + thresh[t].color + '" font-size="8" font-family="Inter" opacity="0.7">' + thresh[t].lbl + '</text>';
+      }
+    }
+
+    // Confidence band (upper to lower polygon)
+    var bandUpper = [];
+    var bandLower = [];
+    // Start from last historical point with zero spread
+    bandUpper.push(toX(hist.length - 1) + "," + toY(hist[hist.length - 1].rate));
+    bandLower.push(toX(hist.length - 1) + "," + toY(hist[hist.length - 1].rate));
+    for (var fi = 0; fi < forecast.length; fi++) {
+      var xPos = toX(hist.length + fi);
+      bandUpper.push(xPos + "," + toY(forecast[fi].upper));
+      bandLower.push(xPos + "," + toY(forecast[fi].lower));
+    }
+    // Combine: upper forward, lower backward
+    var bandPoly = bandUpper.join(" ") + " " + bandLower.reverse().join(" ");
+    html += '<polygon points="' + bandPoly + '" fill="url(#bandGrad)"/>';
+
+    // Vertical separator at "today"
+    var sepX = toX(hist.length - 1);
+    html += '<line x1="' + sepX + '" y1="0" x2="' + sepX + '" y2="' + H + '" stroke="#3d5470" stroke-width="1" stroke-dasharray="2,3" opacity="0.5"/>';
+    html += '<text x="' + (sepX + 4) + '" y="12" fill="#3d5470" font-size="8" font-family="Inter">hoje</text>';
+
+    // Historical line (solid blue)
+    var histPts = [];
+    for (var hi = 0; hi < hist.length; hi++) histPts.push(toX(hi) + "," + toY(hist[hi].rate));
+    html += '<polyline points="' + histPts.join(" ") + '" fill="none" stroke="#4db8ff" stroke-width="1.8" stroke-linejoin="round"/>';
+
+    // Forecast line (dashed purple) - starts from last historical
+    var fcPts = [];
+    fcPts.push(toX(hist.length - 1) + "," + toY(hist[hist.length - 1].rate));
+    for (var fj = 0; fj < forecast.length; fj++) {
+      fcPts.push(toX(hist.length + fj) + "," + toY(forecast[fj].rate));
+    }
+    html += '<polyline points="' + fcPts.join(" ") + '" fill="none" stroke="#a855f7" stroke-width="1.8" stroke-dasharray="5,3" stroke-linejoin="round"/>';
+
+    // Historical dots
+    var dcMap = { rare: "#00d68f", good: "#4db8ff", neutral: "#8896aa", bad: "#f59e0b" };
+    for (var hk = 0; hk < hist.length; hk++) {
+      var dc = dcMap[classify(hist[hk].rate)] || "#4db8ff";
+      html += '<circle cx="' + toX(hk) + '" cy="' + toY(hist[hk].rate) + '" r="3" fill="' + dc + '" stroke="#050c18" stroke-width="1.2"/>';
+    }
+
+    // Forecast dots (hollow purple)
+    for (var fk = 0; fk < forecast.length; fk++) {
+      html += '<circle cx="' + toX(hist.length + fk) + '" cy="' + toY(forecast[fk].rate) + '" r="2.8" fill="#050c18" stroke="#a855f7" stroke-width="1.5"/>';
+    }
+
+    svg.innerHTML = html;
+
+    // X-axis labels (show some dates - first, today, +3, +7)
+    var labelHtml = '<span>' + hist[0].date + '</span>';
+    if (hist.length > 3) labelHtml += '<span style="color:var(--muted)">hoje</span>';
+    if (forecast.length > 2) labelHtml += '<span style="color:#a855f7">' + forecast[Math.floor(forecast.length / 2)].date + '</span>';
+    labelHtml += '<span style="color:#a855f7">' + forecast[forecast.length - 1].date + '</span>';
+    labels.innerHTML = labelHtml;
+
+    // Summary text
+    var currRate = hist[hist.length - 1].rate;
+    var rate7d = forecast[forecast.length - 1].rate;
+    var diff = rate7d - currRate;
+    var diffPct = (diff / currRate) * 100;
+    var direction = diff > 0.005 ? "alta" : diff < -0.005 ? "baixa" : "estavel";
+    var directionColor = diff > 0.005 ? "var(--bad)" : diff < -0.005 ? "var(--great)" : "var(--muted)";
+    var arrow = diff > 0.005 ? "^" : diff < -0.005 ? "v" : "->";
+
+    // What this means for the user (buyer of euros)
+    var implication = "";
+    if (direction === "baixa") {
+      implication = "Tendencia favoravel: pode valer a pena aguardar para comprar.";
+    } else if (direction === "alta") {
+      implication = "Tendencia desfavoravel: considere antecipar a compra se possivel.";
+    } else {
+      implication = "Tendencia estavel: pouca diferenca esperada na proxima semana.";
+    }
+
+    summary.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<span>Projecao em 7 dias:</span>' +
+      '<span style="color:' + directionColor + ';font-weight:600">' + arrow + ' R$ ' + rate7d.toFixed(4) + ' (' + (diff >= 0 ? "+" : "") + diffPct.toFixed(2) + '%)</span>' +
+      '</div>' +
+      '<div style="color:' + directionColor + ';font-weight:500;margin-bottom:4px">Tendencia ' + direction + '</div>' +
+      '<div style="color:var(--muted)">' + implication + '</div>' +
+      '<div style="margin-top:6px;font-size:10px;color:var(--dim)">Intervalo provavel: R$ ' + forecast[forecast.length - 1].lower.toFixed(4) + ' - R$ ' + forecast[forecast.length - 1].upper.toFixed(4) + '</div>';
+  }
+
   function renderHistory() {
     var el = document.getElementById("historyList");
     var rows = history.slice().reverse();
@@ -609,6 +824,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
         renderZones(today.rate);
         renderInsights(today.rate);
         renderChart();
+        renderForecast();
         renderHistory();
         document.getElementById("liveDot").style.background = "var(--great)";
         log("=== Atualizacao OK ===");
@@ -670,6 +886,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     });
 
     renderChart();
+    renderForecast();
     renderHistory();
     doFetch();
     setInterval(doFetch, 5 * 60 * 1000);
