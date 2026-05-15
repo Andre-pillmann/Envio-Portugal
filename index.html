@@ -21,6 +21,9 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
 .header-title{font-family:'Instrument Serif',serif;font-size:22px;font-weight:400;letter-spacing:-0.5px}
 .header-sub{font-size:9px;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;margin-top:2px}
 .live-pill{display:flex;align-items:center;gap:6px;background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:5px 12px;font-size:10px;color:var(--muted)}
+#refreshBtnTop{transition:transform .15s,background .2s}
+#refreshBtnTop:active{transform:scale(.9);background:var(--border)}
+#refreshBtnTop:disabled{opacity:.5}
 .dot{width:6px;height:6px;border-radius:50%;background:var(--great);animation:blink 2s ease-in-out infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 #signalBanner{padding:16px 20px;display:flex;align-items:flex-start;gap:14px;border-bottom:1px solid var(--border);transition:background .4s}
@@ -91,7 +94,12 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     <div class="header-title">BR &gt; PT &middot; Envio</div>
     <div class="header-sub">Monitor EUR / BRL</div>
   </div>
-  <div class="live-pill"><div class="dot" id="liveDot"></div><span id="liveTime">--:--</span></div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="live-pill"><div class="dot" id="liveDot"></div><span id="liveTime">--:--</span></div>
+    <button id="refreshBtnTop" aria-label="Atualizar" style="background:var(--surf);border:1px solid var(--border2);color:var(--text);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-appearance:none;font-size:18px;padding:0;line-height:1">
+      <span id="refreshIconTop">&#8635;</span>
+    </button>
+  </div>
 </div>
 
 <div id="signalBanner">
@@ -180,8 +188,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     <div><strong style="color:#a0c8f0">Instalar no iPhone:</strong><br>Safari &gt; Compartilhar &gt; Adicionar a Tela de Inicio &gt; Adicionar.</div>
   </div>
 
-  <button class="refresh-btn" id="refreshBtn"><span id="refreshIcon">&#8635;</span> ATUALIZAR</button>
-  <div class="src-note">Fontes: Frankfurter.dev + jsDelivr CDN</div>
+  <div class="src-note">Fonte: AwesomeAPI (tempo real)</div>
 </div>
 
 <script>
@@ -567,10 +574,10 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
   function doFetch() {
     if (loading) return;
     loading = true;
-    var btn = document.getElementById("refreshBtn");
-    var icon = document.getElementById("refreshIcon");
-    btn.disabled = true;
-    icon.className = "spin";
+    var btn = document.getElementById("refreshBtnTop");
+    var icon = document.getElementById("refreshIconTop");
+    if (btn) btn.disabled = true;
+    if (icon) icon.className = "spin";
     document.getElementById("liveDot").style.background = "var(--bad)";
     document.getElementById("signalTitle").textContent = "Buscando cotacao";
     document.getElementById("signalDesc").textContent = "Consultando fontes";
@@ -621,8 +628,8 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
       })
       .then(function () {
         loading = false;
-        btn.disabled = false;
-        icon.className = "";
+        if (btn) btn.disabled = false;
+        if (icon) icon.className = "";
       });
   }
 
@@ -632,7 +639,7 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     updateTime();
     setInterval(updateTime, 30000);
 
-    var btn = document.getElementById("refreshBtn");
+    var btn = document.getElementById("refreshBtnTop");
     if (btn) btn.addEventListener("click", doFetch);
 
     var simInp = document.getElementById("simEurInput");
