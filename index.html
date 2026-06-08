@@ -729,19 +729,20 @@ body{padding-top:env(safe-area-inset-top);padding-bottom:max(env(safe-area-inset
     }).catch(function (err) {
       log("Falha AwesomeAPI: " + err.message);
       // Fallback to Frankfurter v2 (ECB reference)
-      return fetchJson("https://api.frankfurter.dev/v2/rate/EUR/BRL", "Frankfurter v2 fallback")
+      return fetchJson("https://api.frankfurter.dev/v2/rates?base=EUR&quotes=BRL", "Frankfurter v2 fallback")
         .then(function (j) {
-          if (!j || j.rate == null) throw new Error("Frankfurter v2: rate ausente");
-          var rate = parseFloat(j.rate);
+          if (!j || !j.rates || j.rates.BRL == null) throw new Error("Frankfurter v2: BRL ausente");
+          var rate = parseFloat(j.rates.BRL);
+          var dt = j.date || isoDate(new Date());
           log("OK Frankfurter v2 (fallback): " + rate.toFixed(4));
           // Approximate ask rate from BCE reference (no real spread available)
           liveAskData = {
             compra: rate,
             venda: rate,
-            dataHora: j.date + "T13:00:00",
+            dataHora: dt + "T13:00:00",
             estimated: true
           };
-          return { rate: rate, date: brDate(j.date), isoDate: j.date };
+          return { rate: rate, date: brDate(dt), isoDate: dt };
         });
     });
   }
